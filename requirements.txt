@@ -1,0 +1,9 @@
+MetaTrader5
+pandas
+numpy
+pandas-ta
+scikit-learn
+xgboost
+streamlit
+requests
+python-dotenv
