@@ -7,22 +7,22 @@ from model import AIEngine
 from risk import RiskManager
 from execution import ExecutionEngine
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
-    logger = logging.getLogger("InstantStrategy")
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logger = logging.getLogger("InstantStrategy")
 
+def run_instant_analysis():
     logger.info("Initializing Instant AI Analysis & Execution...")
     
     dp = DataPipeline("XAUUSD", mt5.TIMEFRAME_M15)
     if not dp.connect():
         logger.error("Failed to connect to MT5.")
-        exit(1)
+        return
         
     df_raw = dp.fetch_historical_data(250, tf=mt5.TIMEFRAME_M15)
     if df_raw is None or df_raw.empty:
         logger.error("Failed to fetch historical data.")
         dp.disconnect()
-        exit(1)
+        return
 
     logger.info("Generating Machine Learning Features & Tech Indicators...")
     fe = FeatureEngineer(df_raw)
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     if not model.load():
         logger.error("AI Model not found.")
         dp.disconnect()
-        exit(1)
+        return
         
     ai_pred, proba = model.predict(df_features)
     logger.info(f"AI Matrix Class Prediction: {ai_pred} | Probability: {proba*100:.2f}%")
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     logger.info(f"Executing {direction} | Lot: {lot_size} | Entry: {current_price:.2f} | SL: {sl:.2f} | TP: {tp:.2f}")
     
     exe = ExecutionEngine(symbol="XAUUSD")
-    res = exe.send_order(direction, lot_size, current_price, sl, tp, comment="Instant_AI_Strategy")
+    res = exe.send_order(direction, lot_size, current_price, sl, tp, comment="Instant_UI_Strategy")
     
     if res and res.retcode == mt5.TRADE_RETCODE_DONE:
         logger.info(f"SUCCESS! Strategy Order deployed. Ticket ID: {res.order}")
@@ -65,3 +65,6 @@ if __name__ == "__main__":
         logger.error(f"Execution failed. MT5 Retcode: {res.retcode if res else 'Unknown'}")
         
     dp.disconnect()
+
+if __name__ == "__main__":
+    run_instant_analysis()
