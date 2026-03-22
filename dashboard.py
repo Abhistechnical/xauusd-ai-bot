@@ -1,8 +1,12 @@
 import streamlit as st
 import pandas as pd
 import MetaTrader5 as mt5
+import logging
 from data import DataPipeline
 from features import FeatureEngineer
+
+# Import our instant strategy runner
+from run_strategy_now import run_instant_analysis
 
 # Setup page
 st.set_page_config(page_title="XAUUSD AI Trading Bot", layout="wide")
@@ -41,6 +45,20 @@ if df is not None:
         trend = "Bullish" if df['ema_50'].iloc[-1] > df['ema_200'].iloc[-1] else "Bearish"
         st.metric("Trend", trend)
         
-    st.info("Start `main.py` back-end process to run the active AI loop. This web dashboard is for realtime visualization of the engineered DataFrames.")
+    st.divider()
+    st.subheader("🤖 Instant AI Trade Execution")
+    st.write("Clicking this button commands the AI to instantly analyze the market and deploy a trade using your strict parameters (0.10 Lot | 10 SL | 20 TP).")
+    
+    if st.button("⚡ Analyze & Execute Trade NOW", type="primary"):
+        with st.spinner("AI Matrix analyzing live data and deploying execution instructions to MT5..."):
+            try:
+                run_instant_analysis()
+                # If it doesn't crash, flash success.
+                st.success("✅ Analysis complete! The AI execution command was successfully sent to MT5. Check your MT5 Trade tab to see the active position!")
+            except Exception as e:
+                st.error(f"Error during AI execution: {e}")
+        
+    st.divider()
+    st.info("Start the `main.py` back-end process in your terminal if you want the bot to run the active AI loop autonomously 24/5.")
 else:
     st.error("Failed to connect to MT5 or fetch data. Please ensure MetaTrader 5 is running and logged into a demo/live account.")
